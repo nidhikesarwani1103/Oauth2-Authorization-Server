@@ -1,6 +1,7 @@
 package dev.nidhi.springauthserveroauth2.configs;
 
 
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -8,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 import org.springframework.security.core.userdetails.User;
@@ -55,6 +58,7 @@ public class SecurityConfig {
                             authorizationServer.getEndpointsMatcher()
                     );
 
+                    authorizationServer.oidc(Customizer.withDefaults());
                 })
                 .authorizeHttpRequests(auth ->
                         auth.anyRequest().authenticated()
@@ -137,8 +141,7 @@ public class SecurityConfig {
 
         JWKSet jwkSet = new JWKSet(rsaKey);
 
-        return (jwkSelector, securityContext) ->
-                jwkSelector.select(jwkSet);
+        return new ImmutableJWKSet<>(jwkSet);
     }
 
     private static RSAKey generateRsaKey() {
@@ -158,6 +161,11 @@ public class SecurityConfig {
         } catch (Exception ex) {
             throw new IllegalStateException(ex);
         }
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
 
 }
