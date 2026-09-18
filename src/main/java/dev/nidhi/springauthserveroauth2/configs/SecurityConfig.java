@@ -2,6 +2,10 @@ package dev.nidhi.springauthserveroauth2.configs;
 
 
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import dev.nidhi.springauthserveroauth2.entities.RegisteredClientEntity;
+import dev.nidhi.springauthserveroauth2.repositories.ClientRepository;
+import dev.nidhi.springauthserveroauth2.repositories.JpaRegisteredClientRepository;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -26,6 +30,8 @@ import org.springframework.security.oauth2.server.authorization.client.InMemoryR
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+
+import java.util.Date;
 import java.util.UUID;
 
 
@@ -35,6 +41,7 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -105,35 +112,6 @@ public class SecurityConfig {
                 .build();
     }
 
-    @Bean
-    public RegisteredClientRepository registeredClientRepository() {
-
-        RegisteredClient postmanClient = RegisteredClient
-                .withId(UUID.randomUUID().toString())
-                .clientId("postman-client")
-                .clientSecret("{noop}postman-secret")
-                .clientAuthenticationMethod(
-                        ClientAuthenticationMethod.CLIENT_SECRET_BASIC
-                )
-                .authorizationGrantType(
-                        AuthorizationGrantType.AUTHORIZATION_CODE
-                )
-                .authorizationGrantType(
-                        AuthorizationGrantType.REFRESH_TOKEN
-                )
-                .redirectUri("https://oauth.pstmn.io/v1/callback")
-                .scope("products.read")
-                .scope("products.write")
-                .clientSettings(
-                        ClientSettings.builder()
-                                .requireAuthorizationConsent(true)
-                                .requireProofKey(true)
-                                .build()
-                )
-                .build();
-
-        return new InMemoryRegisteredClientRepository(postmanClient);
-    }
 
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
@@ -167,5 +145,6 @@ public class SecurityConfig {
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
         return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
+
 
 }
