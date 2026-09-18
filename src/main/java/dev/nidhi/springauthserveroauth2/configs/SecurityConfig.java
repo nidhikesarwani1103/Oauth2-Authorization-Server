@@ -10,11 +10,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.web.SecurityFilterChain;
 
 import org.springframework.security.core.userdetails.User;
@@ -55,7 +58,7 @@ public class SecurityConfig {
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(
-            HttpSecurity http) throws Exception {
+            HttpSecurity http, OAuth2AuthorizationService authorizationService) throws Exception {
 
 
         http
@@ -66,6 +69,7 @@ public class SecurityConfig {
                     );
 
                     authorizationServer.oidc(Customizer.withDefaults());
+                    authorizationServer.authorizationService(authorizationService);
                 })
                 .authorizeHttpRequests(auth ->
                         auth.anyRequest().authenticated()
@@ -146,5 +150,15 @@ public class SecurityConfig {
         return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
 
+    @Bean
+    public OAuth2AuthorizationService authorizationService(
+            JdbcOperations jdbcOperations, //this is not an issue, the code runs
+            RegisteredClientRepository registeredClientRepository) {
+
+        return new JdbcOAuth2AuthorizationService(
+                jdbcOperations,
+                registeredClientRepository
+        );
+    }
 
 }

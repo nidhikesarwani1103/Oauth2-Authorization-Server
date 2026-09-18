@@ -6,6 +6,8 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.stereotype.Component;
 
 import org.springframework.stereotype.Repository;
@@ -74,6 +76,21 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
                         registeredClient.getScopes()
                 )
         );
+
+        // NEW
+        registeredClientEntity.setClientSettings(
+                jsonMapper.writeValueAsString(
+                        registeredClient.getClientSettings()
+                )
+        );
+
+        // NEW
+        registeredClientEntity.setTokenSettings(
+                jsonMapper.writeValueAsString(
+                        registeredClient.getTokenSettings()
+                )
+        );
+
       clientRepository.save(registeredClientEntity);
     }
 
@@ -122,6 +139,31 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
 
         for (String redirectUri : entity.getRedirectUris().split(",")) {
             builder.redirectUri(redirectUri);
+        }
+
+        // Only deserialize if values actually exist
+        if (entity.getClientSettings() != null
+                && !entity.getClientSettings().isBlank()) {
+
+            ClientSettings clientSettings =
+                    jsonMapper.readValue(
+                            entity.getClientSettings(),
+                            ClientSettings.class
+                    );
+
+            builder.clientSettings(clientSettings);
+        }
+
+        if (entity.getTokenSettings() != null
+                && !entity.getTokenSettings().isBlank()) {
+
+            TokenSettings tokenSettings =
+                    jsonMapper.readValue(
+                            entity.getTokenSettings(),
+                            TokenSettings.class
+                    );
+
+            builder.tokenSettings(tokenSettings);
         }
 
         return builder.build();
