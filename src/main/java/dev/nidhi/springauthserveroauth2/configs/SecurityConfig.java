@@ -105,7 +105,9 @@ public class SecurityConfig {
             HttpSecurity http) throws Exception {
 
         http
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/auth/signup"))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/signup").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(Customizer.withDefaults());
@@ -113,16 +115,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//
-//        UserDetails user = User.withUsername("nidhi")
-//                .password("{noop}password")
-//                .roles("USER")
-//                .build();
-//
-//        return new InMemoryUserDetailsManager(user);
-//    }
 
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
