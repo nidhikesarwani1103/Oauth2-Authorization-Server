@@ -19,13 +19,18 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 
 import org.springframework.security.core.userdetails.User;
@@ -44,6 +49,7 @@ import org.springframework.security.oauth2.server.authorization.settings.ClientS
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -197,22 +203,23 @@ public class SecurityConfig {
 
         return args -> {
 
-            if (userRepository.findByEmail("nidhi@example.com").isEmpty()) {
+            if (userRepository.findByEmail("utkarsh@example.com").isEmpty()) {
 
                 UserEntity user = new UserEntity();
 
-                user.setEmail("nidhi@example.com");
+                user.setEmail("utkarsh@example.com");
 
                 user.setPassword(
                         passwordEncoder.encode("password123")
                 );
 
+                user.setRole("ADMIN");
                 user.setEnabled(true);
 
                 userRepository.save(user);
 
                 System.out.println(
-                        "Test user created: nidhi@example.com"
+                        "Test user created: utkarsh@example.com"
                 );
             }
         };
@@ -272,6 +279,28 @@ public class SecurityConfig {
                 registeredClientRepository.save(registeredClient);
 
                 System.out.println("OAuth2 client created: postman-client");
+            }
+        };
+    }
+
+
+    @Bean
+    public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer() {
+
+        return context -> {
+
+            if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
+
+                Authentication authentication = context.getPrincipal();
+
+                List<String> authorities = authentication.getAuthorities()
+                        .stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .filter(authority -> authority.startsWith("ROLE_"))
+                        .toList();
+
+                context.getClaims()
+                        .claim("authorities", authorities);
             }
         };
     }

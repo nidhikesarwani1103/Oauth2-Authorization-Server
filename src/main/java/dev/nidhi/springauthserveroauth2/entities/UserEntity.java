@@ -22,4 +22,7 @@ public class UserEntity {
 
     @Column(nullable = false)
     private boolean enabled = true;
+
+    @Column(nullable = false, length = 50)
+    private String role;
 }

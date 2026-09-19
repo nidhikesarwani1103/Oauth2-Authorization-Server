@@ -32,7 +32,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return User.builder()
                 .username(user.getEmail())
                 .password(user.getPassword())
-                .authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                .authorities("ROLE_" + user.getRole())
                 .disabled(!user.isEnabled())
                 .build();
     }
