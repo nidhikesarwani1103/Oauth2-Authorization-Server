@@ -7,11 +7,16 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.ConfigurationSettingNames;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.stereotype.Component;
 
 import org.springframework.stereotype.Repository;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+
+import java.time.Duration;
+import java.util.Map;
 
 @Repository
 public class JpaRegisteredClientRepository implements RegisteredClientRepository {
@@ -145,26 +150,80 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
         if (entity.getClientSettings() != null
                 && !entity.getClientSettings().isBlank()) {
 
-            ClientSettings clientSettings =
-                    jsonMapper.readValue(
-                            entity.getClientSettings(),
-                            ClientSettings.class
-                    );
+            JsonNode json = jsonMapper.readTree(entity.getClientSettings());
 
-            builder.clientSettings(clientSettings);
+            ClientSettings.Builder clientSettings = ClientSettings.builder();
+
+            if (json.has("requireAuthorizationConsent")) {
+                clientSettings.requireAuthorizationConsent(
+                        json.get("requireAuthorizationConsent").asBoolean()
+                );
+            }
+
+            if (json.has("requireProofKey")) {
+                clientSettings.requireProofKey(
+                        json.get("requireProofKey").asBoolean()
+                );
+            }
+
+            builder.clientSettings(clientSettings.build());
         }
 
         if (entity.getTokenSettings() != null
                 && !entity.getTokenSettings().isBlank()) {
 
-            TokenSettings tokenSettings =
-                    jsonMapper.readValue(
-                            entity.getTokenSettings(),
-                            TokenSettings.class
-                    );
+            JsonNode json = jsonMapper.readTree(entity.getTokenSettings());
 
-            builder.tokenSettings(tokenSettings);
+            TokenSettings.Builder tokenSettings = TokenSettings.builder();
+
+            if (json.has("accessTokenTimeToLive")) {
+                tokenSettings.accessTokenTimeToLive(
+                        Duration.parse(
+                                json.get("accessTokenTimeToLive").asText()
+                        )
+                );
+            }
+
+            if (json.has("refreshTokenTimeToLive")) {
+                tokenSettings.refreshTokenTimeToLive(
+                        Duration.parse(
+                                json.get("refreshTokenTimeToLive").asText()
+                        )
+                );
+            }
+
+            if (json.has("authorizationCodeTimeToLive")) {
+                tokenSettings.authorizationCodeTimeToLive(
+                        Duration.parse(
+                                json.get("authorizationCodeTimeToLive").asText()
+                        )
+                );
+            }
+
+            if (json.has("deviceCodeTimeToLive")) {
+                tokenSettings.deviceCodeTimeToLive(
+                        Duration.parse(
+                                json.get("deviceCodeTimeToLive").asText()
+                        )
+                );
+            }
+
+            if (json.has("reuseRefreshTokens")) {
+                tokenSettings.reuseRefreshTokens(
+                        json.get("reuseRefreshTokens").asBoolean()
+                );
+            }
+
+            if (json.has("x509CertificateBoundAccessTokens")) {
+                tokenSettings.x509CertificateBoundAccessTokens(
+                        json.get("x509CertificateBoundAccessTokens").asBoolean()
+                );
+            }
+
+            builder.tokenSettings(tokenSettings.build());
         }
+
+
 
         return builder.build();
     }
