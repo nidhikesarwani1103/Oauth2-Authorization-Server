@@ -47,6 +47,7 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -119,7 +120,7 @@ public class SecurityConfig {
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()
-                .issuer("http://localhost:8080")
+                .issuer("http://localhost:8081")
                 .build();
     }
 
@@ -263,6 +264,8 @@ public class SecurityConfig {
 
                         .tokenSettings(
                                 TokenSettings.builder()
+                                        .accessTokenTimeToLive(Duration.ofHours(1))
+                                        .refreshTokenTimeToLive(Duration.ofDays(30))
                                         .build()
                         )
 
